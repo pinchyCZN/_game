@@ -139,20 +139,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 #endif
 	switch(msg){
     case WM_CREATE:
-		{
-			hDC=GetDC(hwnd);
-			if(hDC)
-				setupPixelFormat(hDC);
-			hGLRC=wglCreateContext(hDC);
-			if(hGLRC)
-				wglMakeCurrent(hDC,hGLRC);
-			if(hDC){
-				SelectObject(hDC,GetStockObject(SYSTEM_FONT));
-				wglUseFontBitmaps(hDC,0,255,1000);
-			}
-			gl_init();
-			create_game_thread(hwnd);
-		}
+		create_game_thread(hwnd);
         return 0;
 	case WM_SIZE:
 		{
@@ -177,11 +164,13 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_MOUSEWHEEL:
 		break;
-	case WM_KEYFIRST:
-		if(wparam==0x1b)
+	case WM_KEYDOWN:
+		if(wparam==VK_ESCAPE)
 			exit(0);
+		set_keydown(wparam);
 		break;
 	case WM_KEYUP:
+		set_keyup(wparam);
 		break;
 	case WM_SYSKEYDOWN:
 		return 0;
@@ -194,23 +183,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_APP:
 		break;
 	case WM_PAINT:
-		{
-			PAINTSTRUCT ps;
-			HDC hdc;
-			hdc=BeginPaint(hwnd,&ps);
-			if(hGLRC){
-				if(FALSE){
-					static DWORD tick=0;
-					printf("%i\n",GetTickCount()-tick);
-					tick=GetTickCount();
-				}
-				render_view(hwnd,hGLRC);
-			}
-			if(hdc){
-				EndPaint(hwnd,&ps);
-			}
-			return 0;
-		}
 		break;
 	case WM_COMMAND:
 		switch(LOWORD(wparam)){

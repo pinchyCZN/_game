@@ -3,6 +3,7 @@
 #include <math.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include "glext.h"
 //#pragma warning(error:4013) //'function' undefined; assuming extern returning int
 
 int g_screenw=1024;
@@ -18,7 +19,11 @@ GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={-5.0,-10.0,10.0,0.0};
 GLfloat white_light[]={1.0,1.0,1.0,1.0};
 
+GLuint vertex_aid=0;
+
 double fps=0;
+PFNGLGENVERTEXARRAYS glGenVertexArrays;
+PFNGLBINDVERTEXARRAY glBindVertexArray;
 
 void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar )
 {
@@ -41,6 +46,7 @@ void reshape(int w, int h)
 int print_globs()
 {
 	printf("%3.2f %3.2f %3.2f , %3.2f %3.2f %3.2f\n",grx,gry,grz,gx,gy,gz);
+	return 0;
 }
 
 int display_str(char *str,int x,int y)
@@ -98,6 +104,13 @@ int gl_init()
 	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 
+	/*
+	glGenVertexArrays=wglGetProcAddress("glGenVertexArrays");
+	glBindVertexArray=wglGetProcAddress("glBindVertexArray");
+	glGenVertexArrays(1,&vertex_aid);
+	glBindVertexArray(vertex_aid);
+	*/
+
 /*
     glMatrixMode(GL_PROJECTION);
     glFrustum(-0.5F, 0.5F, -0.5F, 0.5F, 1.0F, 3.0F);
@@ -112,6 +125,7 @@ int gl_init()
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 */
+	return 0;
 }
 int test_triangle()
 {
@@ -136,13 +150,96 @@ int test_triangle()
 	glPopMatrix();
 	glEnable(GL_TEXTURE_2D);
 	theta+=1.0;
+	return 0;
 }
-int display()
+int render_rect(float *rot,float *trans)
+{
+	static float theta=0;
+	int i;
+	unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
+	float vertices[] = { 
+		0, 0, 0,
+		1, 0, 0,
+		1, 1, 0,
+		0, 1, 0
+	};
+	float normals[] = { 
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1
+	};
+	for(i=0;i<4;i++){
+		//vertices[ 3 * i + 0 ] *= 10;
+		//vertices[ 3 * i + 1 ] *= 10;
+	}
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(trans[0], trans[1], trans[2]);
+	glRotatef(rot[0], 1.0f, 0.0f, 0.0f);
+	glRotatef(rot[1], 0.0f, 1.0f, 0.0f);
+	glRotatef(rot[2], 0.0f, 0.0f, 1.0f);
+	//glRotatef(theta, 0.0f, 1.0f, 0.0f);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glDisable(GL_TEXTURE_2D);
+	glVertexPointer(3,GL_FLOAT,0,vertices);
+	glNormalPointer(GL_FLOAT,0,normals);
+	glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	theta+=1;
+	return 0;
+}
+int render_cube()
+{
+	float rot[]={0,0,0};
+	float trans[]={0,0,0};
+	static theta=0;
+
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=.5;
+	render_rect(rot,trans); //front
+
+	trans[0]=-.5;
+	trans[1]=.5;
+	trans[2]=-.5;
+	rot[0]=180;
+	render_rect(rot,trans); //back
+	theta++;
+
+	trans[0]=-.5;
+	trans[1]=.5;
+	trans[2]=.5;
+	rot[0]=-90;
+	render_rect(rot,trans); //top
+
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=-.5;
+	rot[0]=90;
+	render_rect(rot,trans); //bottom
+
+	trans[0]=.5;
+	trans[1]=-.5;
+	trans[2]=.5;
+	rot[0]=0;
+	rot[1]=90;
+	render_rect(rot,trans); //right
+
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=-.5;
+	rot[0]=0;
+	rot[1]=-90;
+	render_rect(rot,trans); //left
+}
+int do_gfx()
 {
 
 	static float x,y,m,b,h;
 	static float position[3],offset[3];
-	DWORD t1;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	glColor3f(1.0,0.0,0.0);
@@ -158,7 +255,7 @@ int display()
 
 
 
-	test_triangle();
+	dude();
 
 
 //	t1=GetTickCount();
@@ -204,18 +301,14 @@ int display()
 	glLoadIdentity();
 	glScalef(1.0/256, 1.0/256, 1);
 	*/
-
+	return 0;
 }
-int render_view(HWND hwnd,HGLRC hglrc)
+int gl_swap_buffer(HDC hdc,HGLRC hglrc)
 {
-	HDC hdc;
-	if(hwnd==0 || hglrc==0)
-		return FALSE;
-	hdc=GetDC(hwnd);
-	if(hdc){
-		wglMakeCurrent(hdc,hglrc);
-		display();
-		SwapBuffers(hdc);
-	}
+	if(hdc==0 || hglrc==0)
+		return 0;
+	wglMakeCurrent(hdc,hglrc);
+	do_gfx();
+	SwapBuffers(hdc);
 	return 0;
 }
