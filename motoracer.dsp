@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /FI"pragma.h" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "b:\allegro\include" /I "b:\allegro_src\examples\\" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -78,7 +78,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib opengl32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib opengl32.lib  allegro-4.4.2-mt-debug.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"b:\allegro\lib\\"
 
 !ENDIF 
 
@@ -91,7 +91,11 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\CRACKED_MOTO.c
+SOURCE=.\exzbuf.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\main.c
 
 !IF  "$(CFG)" == "motoracer - Win32 Release"
 
@@ -101,26 +105,6 @@ SOURCE=.\CRACKED_MOTO.c
 
 !ENDIF 
 
-# End Source File
-# Begin Source File
-
-SOURCE=.\debug_print.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\game.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\main.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\misc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\render.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
