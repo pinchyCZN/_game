@@ -1,0 +1,6 @@
+Debug/
+Release/
+allegro/
+*.ncb
+*.opt
+*.plg
