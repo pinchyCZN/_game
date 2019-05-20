@@ -97,13 +97,13 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\include;E:\DEV\MSVC_Projects\bucktooth\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\allegro\include;$(SolutionDir)..\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>allegro-5.0.10-monolith-static-md-debug.lib;openal-1.14-static-md-debug.lib;libFLAC-1.2.1-static-md-debug.lib;libogg-1.2.1-static-md-debug.lib;dumb-0.9.3-static-md-debug.lib;libvorbis-1.3.2-static-md-debug.lib;libvorbisfile-1.3.2-static-md-debug.lib;winmm.lib;opengl32.lib;gdiplus.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,13 +116,13 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\include;E:\DEV\MSVC_Projects\bucktooth\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\allegro\include;$(SolutionDir)..\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>allegro-5.0.10-monolith-static-md-debug.lib;openal-1.14-static-md-debug.lib;libFLAC-1.2.1-static-md-debug.lib;libogg-1.2.1-static-md-debug.lib;dumb-0.9.3-static-md-debug.lib;libvorbis-1.3.2-static-md-debug.lib;libvorbisfile-1.3.2-static-md-debug.lib;winmm.lib;opengl32.lib;gdiplus.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,7 +137,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\include;E:\DEV\MSVC_Projects\bucktooth\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\allegro\include;$(SolutionDir)..\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,7 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>allegro-5.0.10-monolith-static-md-debug.lib;openal-1.14-static-md-debug.lib;libFLAC-1.2.1-static-md-debug.lib;libogg-1.2.1-static-md-debug.lib;dumb-0.9.3-static-md-debug.lib;libvorbis-1.3.2-static-md-debug.lib;libvorbisfile-1.3.2-static-md-debug.lib;winmm.lib;opengl32.lib;gdiplus.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -160,7 +160,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\include;E:\DEV\MSVC_Projects\bucktooth\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\allegro\include;$(SolutionDir)..\allegro\examples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,7 +168,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>allegro-5.0.10-monolith-static-md-debug.lib;openal-1.14-static-md-debug.lib;libFLAC-1.2.1-static-md-debug.lib;libogg-1.2.1-static-md-debug.lib;dumb-0.9.3-static-md-debug.lib;libvorbis-1.3.2-static-md-debug.lib;libvorbisfile-1.3.2-static-md-debug.lib;winmm.lib;opengl32.lib;gdiplus.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\DEV\MSVC_Projects\bucktooth\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\allegro\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
