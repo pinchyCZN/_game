@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <conio.h>
 
 HWND ghconsole=0;
@@ -77,7 +78,7 @@ BYTE *wave_data=0;
 int wave_len=0;
 int wave_pos=0;
 
-#define BUF_LEN 1024
+#define BUF_LEN 4096
 WORD buf1[BUF_LEN];
 WORD buf2[BUF_LEN];
 int reverse=0;
@@ -91,10 +92,12 @@ int fill_buf(WORD *buf,int buf_len)
 	src=(WORD*)wave_data;
 	for(i=0;i<buf_len;i++){
 		int offset;
-		if(reverse)
-			pos=wave_pos-i;
+		if(reverse<0)
+			pos=wave_pos-i*(-reverse);
+		else if(reverse>0)
+			pos=wave_pos+i*(reverse);
 		else
-			pos=wave_pos+i;
+			pos=0;
 		offset=pos%src_len;
 		if(offset<0)
 			offset=src_len+offset;
@@ -104,6 +107,30 @@ int fill_buf(WORD *buf,int buf_len)
 	if(pos<0)
 		pos=-pos;
 	wave_pos=pos;
+	return 0;
+}
+
+int write_wave(WORD *dest,int dest_count,WORD *src,int src_count,int *src_pos,float speed)
+{
+	int i;
+	float fpos;
+	int pos;
+	int count;
+	count=min(dest_count,src_count);
+	pos=*src_pos;
+	fpos=pos;
+	for(i=0;i<count;i++){
+		if(pos>src_count){
+			pos%=src_count;
+		}else if(pos<0){
+			pos=-pos;
+			pos%=src_count;
+			pos=src_count-pos;
+		}
+		dest[i]=src[pos];
+		fpos+=speed;
+		pos=(int)fpos;
+	}
 	return 0;
 }
 
@@ -207,7 +234,7 @@ int main(int argc,char **argv)
 	wf.wBitsPerSample=16;
 	wf.cbSize=sizeof(wf);
 	wf.nChannels=2;
-	wf.nSamplesPerSec=8000;
+	wf.nSamplesPerSec=44100;
 	waveOutOpen(&hwo,WAVE_MAPPER,&wf,(SIZE_T)&audio_callback,0,CALLBACK_FUNCTION);
 	if(hwo){
 		int i,count;
@@ -234,9 +261,9 @@ int main(int argc,char **argv)
 			break;
 
 		if(key_down(VK_LEFT))
-			reverse=1;
-		else
-			reverse=0;
+			reverse--;
+		else if(key_down(VK_RIGHT))
+			reverse++;
 		if(last_rev!=reverse){
 			printf("rev=%i\n",reverse);
 			last_rev=reverse;
