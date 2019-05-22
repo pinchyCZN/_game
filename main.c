@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
+#include <math.h>
+#include <stdarg.h>
 
 HWND ghconsole=0;
-int _open_osfhandle(long,int);
+int _open_osfhandle(HANDLE,int);
 static DWORD(WINAPI *SetConsoleIcon)(HICON)=0;
 #define _O_TEXT         0x4000  /* file mode is text (translated) */
 
@@ -26,7 +28,7 @@ void open_console()
 		return;
 	}
 	AllocConsole();
-	hcrt=_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE),_O_TEXT);
+	hcrt=_open_osfhandle(GetStdHandle(STD_OUTPUT_HANDLE),_O_TEXT);
 
 	fflush(stdin);
 	hf=_fdopen(hcrt,"w");
@@ -76,50 +78,117 @@ int tick_measure(int end)
 
 BYTE *wave_data=0;
 int wave_len=0;
-int wave_pos=0;
+double wave_pos=0;
+double wave_speed=0;
 
 #define BUF_LEN 4096
 WORD buf1[BUF_LEN];
 WORD buf2[BUF_LEN];
-int reverse=0;
 
-int fill_buf(WORD *buf,int buf_len)
+int fread_data(FILE *f,BYTE *buf,int len)
 {
-	int pos=0;
-	int i;
-	WORD *src;
-	int src_len=wave_len/2;
-	src=(WORD*)wave_data;
-	for(i=0;i<buf_len;i++){
-		int offset;
-		if(reverse<0)
-			pos=wave_pos-i*(-reverse);
-		else if(reverse>0)
-			pos=wave_pos+i*(reverse);
-		else
-			pos=0;
-		offset=pos%src_len;
-		if(offset<0)
-			offset=src_len+offset;
-		buf[i]=src[offset];
-	}
-	pos=(pos+1)%src_len;
-	if(pos<0)
-		pos=-pos;
-	wave_pos=pos;
+	int result=FALSE;
+	int x;
+	x=fread(buf,1,len,f);
+	if(x==len)
+		result=TRUE;
+	return result;
+}
+int log_error(const char *fmt,...)
+{
+	va_list ap;
+	va_start(ap,fmt);
+	vprintf(fmt,ap);
 	return 0;
 }
+int get32bit(BYTE *buf)
+{
+	int *ptr=(int*)buf;
+	return ptr[0];
+}
+int get16bit(BYTE *buf)
+{
+	unsigned short *ptr=(unsigned short*)buf;
+	return ptr[0];
+}
 
-int write_wave(WORD *dest,int dest_count,WORD *src,int src_count,int *src_pos,float speed)
+int read_wave_file(const char *fname,BYTE **dst,int *dst_len)
+{
+	int result=FALSE;
+	FILE *f;
+	BYTE buf[128];
+	int val;
+	enum{FIND_FMT,FIND_DATA};
+	int state=FIND_FMT;
+	f=fopen(fname,"rb");
+	if(0==f){
+		printf("unable to open file:%s\n",fname);
+		return result;
+	}
+	if(!fread_data(f,buf,12)){
+		log_error("unable to read file:%s\n",fname);
+	}
+	if(0!=strncmp(buf,"RIFF",sizeof('RIFF'))){
+		printf("invalid wave header\n");
+		goto WAVE_ERROR;
+	}
+	if(0!=strncmp(buf + 8,"WAVE",sizeof('WAVE'))){
+		printf("invalid wave header\n");
+		goto WAVE_ERROR;
+	}
+	while(1){
+		if(!fread_data(f,buf,8)){
+			log_error("unable to read file:%s\n",fname);
+		}
+		if(FIND_FMT==state){
+			if(0==strncmp(buf,"fmt ",sizeof('fmt '))){
+				state=FIND_DATA;
+			}
+			val=get32bit(buf+4);
+			fseek(f,val,SEEK_CUR);
+		}else if(FIND_DATA==state){
+			val=get32bit(buf + 4);
+			if(0 == strncmp(buf,"data",sizeof('data'))){
+				BYTE *tmp;
+				tmp=malloc(val);
+				if(0==tmp){
+					log_error("unable to allocate space [%u] for wave file %s\n",val,fname);
+					goto WAVE_ERROR;
+				}
+				if(!fread_data(f,buf,val)){
+					log_error("unable to read all data [%u] from wave file %s\n",val,fname);
+					free(tmp);
+					goto WAVE_ERROR;
+				}
+				*dst=tmp;
+				*dst_len=val;
+			}
+			fseek(f,val,SEEK_CUR);
+		}else{
+			log_error("state error\n");
+			goto WAVE_ERROR;
+		}
+	}
+WAVE_ERROR:
+	fclose(f);
+	return result;
+}
+
+int write_wave(DWORD *dest,int dest_count,DWORD *src,int src_count,double *src_pos,double speed)
 {
 	int i;
-	float fpos;
+	double fpos;
 	int pos;
 	int count;
+	if(0==src_count){
+		memset(dest,0,dest_count*2);
+		return 0;
+	}
 	count=min(dest_count,src_count);
-	pos=*src_pos;
-	fpos=pos;
+	fpos=*src_pos;
+	fpos=fmod(fpos,src_count);
 	for(i=0;i<count;i++){
+		pos=fpos;
 		if(pos>src_count){
 			pos%=src_count;
 		}else if(pos<0){
@@ -129,7 +198,12 @@ int write_wave(WORD *dest,int dest_count,WORD *src,int src_count,int *src_pos,fl
 		}
 		dest[i]=src[pos];
 		fpos+=speed;
-		pos=(int)fpos;
+	}
+	*src_pos=fpos;
+	if(i<dest_count){
+		for( ;i<dest_count;i++){
+			dest[i]=0;
+		}
 	}
 	return 0;
 }
@@ -146,7 +220,7 @@ void CALLBACK audio_callback(HWAVEOUT hwo,UINT msg,LPDWORD instance,LPDWORD para
 		return;
 	tmp=wh->lpData;
 	tmp_len=wh->dwBufferLength;
-	fill_buf((WORD*)tmp,tmp_len/2);
+	write_wave((DWORD*)tmp,tmp_len/4,(DWORD*)wave_data,wave_len/4,&wave_pos,wave_speed);
 	if(0)
 	{
 		int i;
@@ -178,6 +252,14 @@ int get_key()
 	}
 	return result;
 }
+int getkey_wait()
+{
+	int key;
+	key=getch();
+	if(0xE0==key)
+		key=getch();
+	return key;
+}
 int get_flen(FILE *f)
 {
 	int result;
@@ -186,28 +268,6 @@ int get_flen(FILE *f)
 	fseek(f,0,SEEK_END);
 	result=ftell(f);
 	fseek(f,pos,SEEK_SET);
-	return result;
-}
-int read_wave_file()
-{
-	int result=FALSE;
-	FILE *f;
-	f=fopen("example.wav","rb");
-	if(0==f){
-		printf("unable top open file\n");
-		goto F_ERROR;
-	}
-	wave_len=get_flen(f);
-	wave_data=malloc(wave_len);
-	if(0==wave_data){
-		printf("unable to allocate space for wave file\n");
-		goto F_ERROR;
-	}
-	fread(wave_data,1,wave_len,f);
-	result=TRUE;
-F_ERROR:
-	if(f)
-		fclose(f);
 	return result;
 }
 int key_down(int key)
@@ -226,7 +286,7 @@ int main(int argc,char **argv)
 	HWAVEOUT hwo;
 	WAVEFORMATEX wf={0};
 	WAVEHDR wh[2]={0};
-	if(!read_wave_file())
+	if(!read_wave_file("example.wav",&wave_data,&wave_len))
 		return 0;
 
 	wf.wFormatTag=1;
@@ -246,27 +306,30 @@ int main(int argc,char **argv)
 			wh[i].dwBufferLength=sizeof(buf1);
 			wh[i].lpData=(LPSTR)blist[i&1];
 			wh[i].dwUser=i+1;
-			audio_callback(hwo,0,0,tmp,0);
+			audio_callback(hwo,0,0,(LPDWORD)tmp,0);
 		}
 	}else{
 		printf("wave out failed\n");
 	}
 	printf("sleeping\npress esc to quit\n");
 	while(1){
-		static int last_rev=0;
+		static double last=0;
 		int key;
-		Sleep(100);
-		key=get_key();
+		double amount=.1;
+		key=getkey_wait();
 		if(0x1b==key)
 			break;
-
+		if(key_down(VK_CONTROL))
+			amount=.01;
 		if(key_down(VK_LEFT))
-			reverse--;
+			wave_speed-=amount;
 		else if(key_down(VK_RIGHT))
-			reverse++;
-		if(last_rev!=reverse){
-			printf("rev=%i\n",reverse);
-			last_rev=reverse;
+			wave_speed+=amount;
+		//if(last!=wave_speed)
+		{
+			printf("key=%i\n",key);
+			printf("speed=%f\n",wave_speed);
+			last=wave_speed;
 		}
 	}
 	waveOutClose(hwo);
