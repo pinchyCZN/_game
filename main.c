@@ -155,13 +155,15 @@ int read_wave_file(const char *fname,BYTE **dst,int *dst_len)
 					log_error("unable to allocate space [%u] for wave file %s\n",val,fname);
 					goto WAVE_ERROR;
 				}
-				if(!fread_data(f,buf,val)){
+				if(!fread_data(f,tmp,val)){
 					log_error("unable to read all data [%u] from wave file %s\n",val,fname);
 					free(tmp);
 					goto WAVE_ERROR;
 				}
 				*dst=tmp;
 				*dst_len=val;
+				result=TRUE;
+				break;
 			}
 			fseek(f,val,SEEK_CUR);
 		}else{
@@ -207,6 +209,8 @@ int write_wave(DWORD *dest,int dest_count,DWORD *src,int src_count,double *src_p
 	}
 	return 0;
 }
+
+//int mix_wave(WORD *dest,int dest_count,DWORD *src,)
 
 void CALLBACK audio_callback(HWAVEOUT hwo,UINT msg,LPDWORD instance,LPDWORD param1,LPDWORD param2)
 {
