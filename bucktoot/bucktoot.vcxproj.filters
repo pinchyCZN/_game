@@ -18,6 +18,9 @@
     <ClCompile Include="..\other.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\ex_draw_bitmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>

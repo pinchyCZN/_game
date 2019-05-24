@@ -81,7 +81,7 @@ int wave_len=0;
 double wave_pos=0;
 double wave_speed=0;
 
-#define BUF_LEN 4096
+#define BUF_LEN 2048+256
 WORD buf1[BUF_LEN];
 WORD buf2[BUF_LEN];
 
