@@ -27,6 +27,7 @@
     </ClCompile>
     <ClCompile Include="..\main.c" />
     <ClCompile Include="..\other.c" />
+    <ClCompile Include="..\wave_player.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

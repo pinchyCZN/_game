@@ -2,6 +2,9 @@
 Debug/
 Release/
 allegro/
+bucktoot/*/
+*.user
+*.log
 *.ncb
 *.opt
 *.plg
