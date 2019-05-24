@@ -215,6 +215,35 @@ static SHORT clamp_short(LONG val)
 	return result;
 }
 
+static int check_loop(WAVE_SAMPLE *sample,int *pos)
+{
+	int result=FALSE;
+	int x;
+	int play=1;
+	int before=0;
+	x=*pos;
+	if(x>=sample->data_len){
+		play=0;
+	}else if(x<0){
+		play=0;
+		before=1;
+	}
+	if(0==play && sample->do_loop){
+		play=1;
+		if(before){
+			int frame_size=sample->channels*sample->bytes;
+			x=sample->data_len-frame_size;
+			if(x<0)
+				x=0;
+		}else{
+			x=0;
+		}
+	}
+	*pos=x;
+	sample->play=play;
+	return result;
+}
+
 static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 {
 	int i,count;
@@ -237,24 +266,25 @@ static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 		q=pos%iframe_size;
 		if(q)
 			pos-=q;
-		if(pos>=sample->data_len){
-			sample->play=0;
+		check_loop(sample,&pos);
+		if(!sample->play)
 			break;
-		}
+		int src_index=0;
 		wsrc=(SHORT*)(sample->data+pos);
 		a=wdst[0];
-		if(a<0)
-			a=a;
-		b=wsrc[0];
+		b=wsrc[src_index];
 		a+=b;
 		a=clamp_short(a);
 		wdst[0]=a;
+		if(sample->channels>1)
+			src_index++;
 		a=wdst[1];
-		b=wsrc[1];
+		b=wsrc[src_index];
 		a+=b;
 		a=clamp_short(a);
 		wdst[1]=a;
 		sample->current_frame+=g_speed;
+		sample->current_frame=fmod(sample->current_frame,frame_count);
 		i+=g_bytes*g_channels;
 	}
 	return TRUE;
@@ -294,7 +324,7 @@ void CALLBACK audio_callback(HWAVEOUT hwo,UINT msg,LPDWORD instance,LPDWORD para
 		printf("%i\n",i);
 	}
 	enter_mutex();
-	waveOutUnprepareHeader(hwo,wh,wh_size);
+	//waveOutUnprepareHeader(hwo,wh,wh_size);
 	waveOutPrepareHeader(hwo,wh,wh_size);
 	sample_count=sizeof(sample_list)/sizeof(WAVE_SAMPLE);
 	mix_samples(tmp,tmp_len,sample_list,sample_count);
@@ -430,6 +460,15 @@ int load_wavs()
 		if(read_wave_file(wf)){
 			wf->fname=strdup(wfd.cFileName);
 			index++;
+			if(wf->channels!=2){
+				printf("%s %i\n",wfd.cFileName,wf->channels);
+			}
+			if(wf->bits!=16){
+				printf("%s %i\n",wfd.cFileName,wf->bits);
+			}
+			if(wf->sample_rate != 44100){
+				printf("%s %i\n",wfd.cFileName,wf->sample_rate);
+			}
 		}else{
 			free(wf->fname);
 			wf->fname=0;
@@ -440,7 +479,7 @@ int load_wavs()
 	return result;
 }
 
-int play_index(int i)
+int play_index(int i,int loop)
 {
 	int count;
 	WAVE_FILE *wf;
@@ -451,7 +490,7 @@ int play_index(int i)
 	wf=&mywavs[i];
 	if(0==wf->fname)
 		return 0;
-	printf("playing %s [%i]\n",wf->fname,i);
+	printf("playing %s [%i] %s\n",wf->fname,i,loop?"looping":"");
 	ws.bytes=wf->bits>>3;
 	ws.channels=wf->channels;
 	ws.data=wf->wav_data;
@@ -459,6 +498,7 @@ int play_index(int i)
 	ws.play=1;
 	ws.sample_rate=wf->sample_rate;
 	ws.speed=1;
+	ws.do_loop=loop;
 	add_sample(&ws);
 	count=sizeof(sample_list)/sizeof(WAVE_SAMPLE);
 	int total=0;
@@ -469,6 +509,26 @@ int play_index(int i)
 	}
 	leave_mutex();
 	printf("total playing:%i\n",total);
+	return 0;
+}
+
+int clear_all()
+{
+	int i,count;
+	count=sizeof(sample_list) / sizeof(WAVE_SAMPLE);
+	printf("stopping all\n");
+	enter_mutex();
+	for(i=0;i<count;i++){
+		sample_list[i].play=0;
+	}
+	leave_mutex();
+	return 0;
+}
+
+int mod_speed(double mod)
+{
+	g_speed+=mod;
+	printf("speed=%f\n",g_speed);
 	return 0;
 }
 
@@ -492,15 +552,31 @@ int test_wave_player()
 			index%=x;
 			if(index<0)
 				index=x+index;
-			play_index(index);
+			play_index(index,0);
 		}
 		if('x'==key){
 			index++;
 			index%=sizeof(mywavs) / sizeof(WAVE_FILE);
-			play_index(index);
+			play_index(index,0);
+		}
+		if('`'==key){
+			clear_all();
+		}
+		double mod=.1;
+		if(key_down(VK_CONTROL))
+			mod=.01;
+
+		if(75==key){ //left
+			mod_speed(-mod);
+		}
+		if(77==key){ //right
+			mod_speed(mod);
 		}
 		if(' '==key){
-			play_index(index);
+			play_index(index,0);
+		}
+		if('c'==key){
+			play_index(index,1);
 		}
 		{
 			//printf("key=%i,%c\n",key,key);
