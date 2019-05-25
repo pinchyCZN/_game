@@ -89,21 +89,50 @@ int do_wait()
 int get_key()
 {
 	int result=0;
-	if(kbhit()){
-		int x=getch();
-		if(0xE0==x)
-			x=getch();
-		result=x;
+	static HANDLE hcon=0;
+	if(0==hcon)
+		hcon=GetStdHandle(STD_INPUT_HANDLE);
+	if(INVALID_HANDLE_VALUE==hcon)
+		return 0;
+	{
+		INPUT_RECORD rec={0};
+		DWORD count=0;
+		if(PeekConsoleInput(hcon,&rec,1,&count)){
+			if(count==1){
+				ReadConsoleInput(hcon,&rec,1,&count);
+				if(rec.EventType==KEY_EVENT){
+					KEY_EVENT_RECORD *ke=(KEY_EVENT_RECORD*)&rec.Event.KeyEvent;
+					if(ke->bKeyDown){
+						result=(int)ke->wVirtualKeyCode;
+					}
+				}
+			}
+		}
 	}
 	return result;
 }
+
 int getkey_wait()
 {
-	int key;
-	key=getch();
-	if(0xE0==key)
-		key=getch();
-	return key;
+	int result=0;
+	static HANDLE hcon=0;
+	if(0==hcon)
+		hcon=GetStdHandle(STD_INPUT_HANDLE);
+	if(INVALID_HANDLE_VALUE==hcon)
+		return 0;
+	while(1){
+		INPUT_RECORD rec={0};
+		DWORD count=0;
+		ReadConsoleInput(hcon,&rec,1,&count);
+		if(rec.EventType==KEY_EVENT){
+			KEY_EVENT_RECORD *ke=(KEY_EVENT_RECORD*)&rec.Event.KeyEvent;
+			if(ke->bKeyDown){
+				result=(int)ke->wVirtualKeyCode;
+				break;
+			}
+		}
+	}
+	return result;
 }
 int get_flen(FILE *f)
 {
