@@ -38,7 +38,7 @@ typedef struct{
 	double speed;
 }WAVE_SAMPLE;
 
-WAVE_SAMPLE sample_list[200]={0};
+WAVE_SAMPLE g_sample_list[200]={0};
 
 typedef struct{
 	char *fname;
@@ -267,6 +267,7 @@ static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 		if(q)
 			pos-=q;
 		int src_index=0;
+		//left channel
 		wsrc=(SHORT*)(sample->data+pos);
 		a=wdst[0];
 		b=wsrc[src_index];
@@ -275,6 +276,7 @@ static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 		wdst[0]=a;
 		if(sample->channels>1)
 			src_index++;
+		//right channel
 		a=wdst[1];
 		b=wsrc[src_index];
 		a+=b;
@@ -326,8 +328,8 @@ void CALLBACK audio_callback(HWAVEOUT hwo,UINT msg,LPDWORD instance,LPDWORD para
 	enter_mutex();
 	//waveOutUnprepareHeader(hwo,wh,wh_size);
 	waveOutPrepareHeader(hwo,wh,wh_size);
-	sample_count=sizeof(sample_list)/sizeof(WAVE_SAMPLE);
-	mix_samples(tmp,tmp_len,sample_list,sample_count);
+	sample_count=sizeof(g_sample_list)/sizeof(WAVE_SAMPLE);
+	mix_samples(tmp,tmp_len,g_sample_list,sample_count);
 	waveOutWrite(hwo,wh,wh_size);
 	leave_mutex();
 }
@@ -337,10 +339,10 @@ static int add_sample(WAVE_SAMPLE *wav)
 	int result=FALSE;
 	int i,count;
 	enter_mutex();
-	count=sizeof(sample_list)/sizeof(WAVE_SAMPLE);
+	count=sizeof(g_sample_list)/sizeof(WAVE_SAMPLE);
 	for(i=0;i<count;i++){
 		WAVE_SAMPLE *tmp;
-		tmp=&sample_list[i];
+		tmp=&g_sample_list[i];
 		if(!tmp->play){
 			*tmp=*wav;
 			tmp->play=1;
@@ -501,11 +503,11 @@ int play_index(int i,int loop)
 	ws.speed=1;
 	ws.do_loop=loop;
 	add_sample(&ws);
-	count=sizeof(sample_list)/sizeof(WAVE_SAMPLE);
+	count=sizeof(g_sample_list)/sizeof(WAVE_SAMPLE);
 	int total=0;
 	enter_mutex();
 	for(i=0;i<count;i++){
-		if(sample_list[i].play)
+		if(g_sample_list[i].play)
 			total++;
 	}
 	leave_mutex();
@@ -516,11 +518,11 @@ int play_index(int i,int loop)
 int clear_all()
 {
 	int i,count;
-	count=sizeof(sample_list) / sizeof(WAVE_SAMPLE);
+	count=sizeof(g_sample_list) / sizeof(WAVE_SAMPLE);
 	printf("stopping all\n");
 	enter_mutex();
 	for(i=0;i<count;i++){
-		sample_list[i].play=0;
+		g_sample_list[i].play=0;
 	}
 	leave_mutex();
 	return 0;

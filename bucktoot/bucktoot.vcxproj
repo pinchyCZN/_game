@@ -25,6 +25,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\game.c" />
     <ClCompile Include="..\main.c" />
     <ClCompile Include="..\other.c" />
     <ClCompile Include="..\wave_player.c" />
