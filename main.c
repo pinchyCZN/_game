@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <process.h>
 #include <mmsystem.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,7 +157,9 @@ int key_down(int key)
 
 int main(int argc,char **argv)
 {
-	test_wave_player();
+	int test_wave_player();
+	_beginthread(&test_wave_player,0,0);
+	test_game();
 }
 
 

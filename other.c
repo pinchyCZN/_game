@@ -33,3 +33,4 @@ void *_imp__sprintf=&sprintf;
 void *_imp__fprintf=&fprintf;
 void *_imp___snprintf=&snprintf;
 void *_imp__printf=&printf;
+void *_imp__vfprintf=&vfprintf;

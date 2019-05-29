@@ -246,6 +246,21 @@ static int check_loop(WAVE_SAMPLE *sample,double frame_size)
 	return result;
 }
 
+static int clamp_current_frame(WAVE_SAMPLE *sample,double frame_size,double frame_count)
+{
+	int play=sample->play;
+	if(sample->do_loop){
+		check_loop(sample,frame_size);
+	}else{
+		if(sample->current_frame>=frame_count)
+			play=FALSE;
+		else if(sample->current_frame<0)
+			play=FALSE;
+		sample->play=play;
+	}
+	return TRUE;
+}
+
 static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 {
 	int i,count;
@@ -256,8 +271,11 @@ static int mix_sample(BYTE *dst,int dst_size,WAVE_SAMPLE *sample)
 	if(iframe_size<=0)
 		return FALSE;
 	frame_size=iframe_size;
-	count=dst_size;
 	frame_count=sample->data_len/frame_size;
+	clamp_current_frame(sample,frame_size,frame_count);
+	if(!(sample->play))
+		return FALSE;
+	count=dst_size;
 	for(i=0;i<count;){
 		SHORT *wdst,*wsrc;
 		LONG a,b;
@@ -504,6 +522,13 @@ int play_index(int i,int loop)
 	ws.sample_rate=wf->sample_rate;
 	ws.speed=1;
 	ws.do_loop=loop;
+	if(g_speed<0){
+		double frame_count=0;
+		if(ws.bytes){
+			frame_count=ws.data_len/(ws.bytes*ws.channels);
+			ws.current_frame=frame_count-1;
+		}
+	}
 	add_sample(&ws);
 	count=sizeof(g_sample_list)/sizeof(WAVE_SAMPLE);
 	int total=0;
