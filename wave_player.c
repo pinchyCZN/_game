@@ -239,6 +239,8 @@ static int check_loop(WAVE_SAMPLE *sample,double frame_size)
 		end=sample->data_len/frame_size;
 		if(cpos>=end)
 			sample->play=0;
+		else if(cpos<0)
+			sample->play=0;
 	}
 	sample->current_frame=cpos;
 	return result;
