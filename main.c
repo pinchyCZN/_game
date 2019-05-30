@@ -145,7 +145,7 @@ int get_flen(FILE *f)
 	fseek(f,pos,SEEK_SET);
 	return result;
 }
-int key_down(int key)
+int key_state(int key)
 {
 	int val;
 	val=GetKeyState(key);

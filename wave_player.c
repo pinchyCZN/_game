@@ -593,7 +593,7 @@ int test_wave_player()
 			clear_all();
 		}
 		double mod=.1;
-		if(key_down(VK_CONTROL))
+		if(key_state(VK_CONTROL))
 			mod=.01;
 
 		if(VK_LEFT==key){ //left
@@ -614,7 +614,9 @@ int test_wave_player()
 			last=g_speed;
 		}
 	}
+	printf("stopping audio\n");
 	stop_audio();
+	do_exit();
 	return 0;
 }
 
