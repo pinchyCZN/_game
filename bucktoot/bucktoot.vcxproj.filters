@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\tcc">
+      <UniqueIdentifier>{24b17f8c-47e4-4857-a986-323d605d3162}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\other.c">
@@ -30,5 +33,21 @@
     <ClCompile Include="..\game.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\compiler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tcc\src\libtcc.c">
+      <Filter>Source Files\tcc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\tcc\libtcc.h">
+      <Filter>Source Files\tcc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\tcc\libtcc.def">
+      <Filter>Source Files\tcc</Filter>
+    </None>
   </ItemGroup>
 </Project>

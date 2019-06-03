@@ -3,31 +3,28 @@
 #include <allegro5/allegro_font.h>
 #include <stdlib.h>
 #include <math.h>
+#include "libtcc.h"
 
 ALLEGRO_MUTEX *g_mutex=0;
 ALLEGRO_FONT *g_font;
 static int g_shutdown=FALSE;
-static int key_list[4]={0};
-static int key_pressed=0;
-static int key_released=0;
+static int key_list[10]={0};
 
 #define PLAYER1 1
 #define PLAYER2 2
 
-typedef struct{
-	int state;
-	int sx,sy;
-	int w,h;
-	int xskip;
-	int max_frame;
-	int draw_flag;
-}ANIM_DRAW;
+__int64 get_time();
 
 typedef struct{
 	int state;
 	int frame;
+	int sx,sy;
+	int sw,sh;
+	float dx,dy;
+	float dw,dh;
+	int h_flip,v_flip;
+	float h_scale,v_scale;
 	ALLEGRO_BITMAP *bm;
-	ANIM_DRAW draw[4];
 }ANIM;
 
 typedef struct{
@@ -38,6 +35,7 @@ typedef struct{
 	float vx;
 	float vy;
 	float vz;
+	__int64 time;
 	ANIM anim;
 }ENTITY;
 
@@ -103,7 +101,10 @@ int are_keys_down(int *list,int count)
 	int result=0;
 	int i;
 	for(i=0;i<count;i++){
-		if(is_key_down(list[i])){
+		int key=list[i];
+		if(0==key)
+			continue;
+		if(is_key_down(key)){
 			result++;
 		}
 	}
@@ -114,7 +115,10 @@ int are_keys_up(int *list,int count)
 	int result=0;
 	int i;
 	for(i=0;i<count;i++){
-		if(!is_key_down(list[i])){
+		int key=list[i];
+		if(0==key)
+			continue;
+		if(!is_key_down(key)){
 			result++;
 		}
 	}
@@ -160,7 +164,7 @@ int get_entity(int id,ENTITY **e)
 		ENTITY *tmp;
 		tmp=blobs[i];
 		if(tmp){
-			if(0==tmp->id){
+			if(id==tmp->id){
 				*e=tmp;
 				result=TRUE;
 				break;
@@ -170,28 +174,114 @@ int get_entity(int id,ENTITY **e)
 	return result;
 }
 
+typedef struct{
+	int keys[4];
+	__int64 delta;
+	int sx,sy;
+	int xskip,yskip;
+	int mx,my;
+	int modulo;
+	int flip_h;
+	float scale;
+}MOVEMENT;
+
 int move_player1()
 {
 	int result=FALSE;
 	ENTITY *e;
+	ANIM *anim;
+	__int64 tick,delta;
+	int i,count;
+	int found=FALSE;
+	MOVEMENT moves[]={
+		{{ALLEGRO_KEY_RIGHT,0,0,0},
+		30, //time
+		80+17,34, //sx,sy
+		17,0, //x/y skip
+		1,0, //mx,my
+		3,0,3.0}, //mod,flip,scale
+		{{ALLEGRO_KEY_LEFT,0,0,0},
+		30,
+		80+17,34,
+		17,0,
+		-1,0, //mx,my
+		3,1,3.0},
+	};
 	if(!get_entity(PLAYER1,&e))
 		return result;
-	//e->
+	anim=&e->anim;
+	anim->sw=16;
+	anim->sh=16;
+	tick=get_time();
+	delta=tick-e->time;
+	count=_countof(moves);
+	for(i=0;i<count;i++){
+		MOVEMENT *m;
+		int key_count=_countof(m->keys);
+		m=&moves[i];
+		if(are_keys_down(m->keys,key_count)){
+			if(delta>=m->delta){
+				int frame;
+				e->xpos+=m->mx;
+				e->ypos+=m->my;
+				frame=(anim->frame+1)%m->modulo;
+				anim->sx=m->sx+(frame*m->xskip);
+				anim->sy=m->sy+(frame*m->yskip);
+				anim->dx=e->xpos;
+				anim->dy=e->ypos;
+				anim->h_flip=m->flip_h;
+				anim->dw=anim->sw;
+				anim->dh=anim->sh;
+				anim->h_scale=m->scale;
+				anim->v_scale=m->scale;
+				anim->frame=frame;
+				e->time=tick;
+
+			}
+			found=TRUE;
+		}
+	}
+	if(!found){
+		anim->sx=80;
+		anim->sy=34;
+		anim->frame=0;
+		anim->dx=e->xpos;
+		anim->dy=e->ypos;
+		anim->dw=anim->sw;
+		anim->dh=anim->sh;
+		anim->h_scale=3.;
+		anim->v_scale=3.;
+		e->time=tick;
+	}
+	return result;
 }
 
-void draw_mario(int x,int y,int frame,double scale,int left)
+void draw_bitmap(ANIM *anim)
 {
-	int w,h;
-	int sx,sy;
 	int flags=0;
-	w=16;
-	h=16;
-	sy=34;
-	sx=80+17+frame*17;
-	if(left){
+	float sx,sy,sw,sh;
+	float dx,dy,dw,dh;
+	ALLEGRO_BITMAP *bm;
+//	sx=80+17+frame*17;
+	// sy=34
+
+	if(0==anim->bm)
+		return;
+	if(anim->h_flip){
 		flags|=ALLEGRO_FLIP_HORIZONTAL;
+	}else if(anim->v_flip){
+		flags|=ALLEGRO_FLIP_VERTICAL;
 	}
-	al_draw_scaled_bitmap(player_bm,sx,sy,w,h,x,y,w*scale,h*scale,flags);
+	sx=anim->sx;
+	sy=anim->sy;
+	sw=anim->sw;
+	sh=anim->sh;
+	dx=anim->dx;
+	dy=anim->dy;
+	dw=anim->dw*anim->h_scale;
+	dh=anim->dh*anim->v_scale;
+	bm=anim->bm;
+	al_draw_scaled_bitmap(bm,sx,sy,sw,sh,dx,dy,dw,dh,flags);
 }
 
 void draw_entities()
@@ -203,7 +293,7 @@ void draw_entities()
 		e=blobs[i];
 		if(0==e)
 			continue;
-		//e->anim.
+		draw_bitmap(&e->anim);
 	}
 }
 
@@ -222,13 +312,13 @@ void *game_thread(ALLEGRO_THREAD *athread,void *arg)
 		al_lock_mutex(g_mutex);
 		al_clear_to_color(al_map_rgb_f(0,0,0));
 		al_draw_textf(g_font,al_map_rgb_f(1,1,1),0,0,0,"x=%i y=%i",x,y);
-		move_player1();
 		draw_entities();
 
 
 		al_flip_display();
 
 		al_unlock_mutex(g_mutex);
+		move_player1();
 		al_wait_for_vsync();
 
 	}
@@ -248,7 +338,12 @@ int create_p1()
 	}
 	e->id=PLAYER1;
 	e->anim.bm=player_bm;
-//	e->anim.state
+	e->anim.state=0;
+	e->xpos=320;
+	e->ypos=200;
+	add_entity(e);
+	move_player1();
+	return TRUE;
 }
 
 int test_game()
@@ -275,8 +370,6 @@ int test_game()
 		abort_msg("unable to load font");
 	}
 
-
-
 	al_get_num_video_adapters();
 
 	al_get_monitor_info(0,&info);
@@ -298,6 +391,7 @@ int test_game()
 	al_resize_display(disp,640,480);
 	al_clear_to_color(al_map_rgb_f(0,0,0));
 	al_flip_display();
+	al_set_window_position(disp,info.x2-640,info.y2-480-100);
 
 	gthread=al_create_thread(&game_thread,(void*)disp);
 	al_start_thread(gthread);
@@ -309,6 +403,7 @@ int test_game()
 		al_wait_for_event(queue,&event);
 		switch(event.type) {
 		case ALLEGRO_EVENT_KEY_CHAR:
+			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			{
 				int key=event.keyboard.keycode;
@@ -322,14 +417,12 @@ int test_game()
 				}
 				printf("key:%i\n",key);
 				set_key_down(key);
-				key_pressed=TRUE;
 			}
 			break;
 		case ALLEGRO_EVENT_KEY_UP:
 			{
 				int key=event.keyboard.keycode;
 				set_key_up(key);
-				key_released=TRUE;
 			}
 			break;
 		}

@@ -49,6 +49,23 @@ void open_console()
 
 }
 
+__int64 get_time()
+{
+	__int64 result=0;
+	LARGE_INTEGER tmp;
+	static LARGE_INTEGER freq={0};
+	static int have_freq=0;
+	QueryPerformanceCounter(&tmp);
+	if(!have_freq){
+		QueryPerformanceFrequency(&freq);
+		have_freq=1;
+	}
+	if(0!=freq.QuadPart){
+		result=(tmp.QuadPart*1000)/freq.QuadPart;
+	}
+	return result;
+
+}
 
 int tick_measure(int end)
 {
@@ -158,6 +175,8 @@ int key_state(int key)
 int main(int argc,char **argv)
 {
 	int test_wave_player();
+	test_shit();
+
 	_beginthread(&test_wave_player,0,0);
 	test_game();
 }
