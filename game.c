@@ -198,13 +198,13 @@ int move_player1()
 		30, //time
 		80+17,34, //sx,sy
 		17,0, //x/y skip
-		1,0, //mx,my
+		4,0, //mx,my
 		3,0,3.0}, //mod,flip,scale
 		{{ALLEGRO_KEY_LEFT,0,0,0},
 		30,
 		80+17,34,
 		17,0,
-		-1,0, //mx,my
+		-4,0, //mx,my
 		3,1,3.0},
 	};
 	if(!get_entity(PLAYER1,&e))
@@ -314,7 +314,6 @@ void *game_thread(ALLEGRO_THREAD *athread,void *arg)
 		al_draw_textf(g_font,al_map_rgb_f(1,1,1),0,0,0,"x=%i y=%i",x,y);
 		draw_entities();
 
-
 		al_flip_display();
 
 		al_unlock_mutex(g_mutex);
@@ -377,7 +376,11 @@ int test_game()
 	if(0==disp){
 		abort_msg("error creating display\n");
 	}
-
+	if(1)
+	{
+		HWND hwnd=al_get_win_window_handle(disp);
+		SetFocus(hwnd);
+	}
 	if(!al_install_keyboard()) {
 		abort_msg("Error installing keyboard.\n");
 	}
