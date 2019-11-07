@@ -376,11 +376,6 @@ int test_game()
 	if(0==disp){
 		abort_msg("error creating display\n");
 	}
-	if(1)
-	{
-		HWND hwnd=al_get_win_window_handle(disp);
-		SetFocus(hwnd);
-	}
 	if(!al_install_keyboard()) {
 		abort_msg("Error installing keyboard.\n");
 	}
@@ -395,6 +390,12 @@ int test_game()
 	al_clear_to_color(al_map_rgb_f(0,0,0));
 	al_flip_display();
 	al_set_window_position(disp,info.x2-640,info.y2-480-100);
+	Sleep(1000);
+	if(1)
+	{
+		HWND hwnd=al_get_win_window_handle(disp);
+		SetFocus(hwnd);
+	}
 
 	gthread=al_create_thread(&game_thread,(void*)disp);
 	al_start_thread(gthread);

@@ -12,13 +12,28 @@ int _open_osfhandle(HANDLE,int);
 static DWORD(WINAPI *SetConsoleIcon)(HICON)=0;
 #define _O_TEXT         0x4000  /* file mode is text (translated) */
 
+HANDLE get_console_handle()
+{
+	static HWND (WINAPI *GetConsoleWindow)(void)=0;
+	if(GetConsoleWindow==0){
+		HMODULE hmod=LoadLibrary(TEXT("kernel32.dll"));
+		if(hmod!=0){
+			GetConsoleWindow=(HWND (WINAPI *)(void))GetProcAddress(hmod,"GetConsoleWindow");
+			if(GetConsoleWindow!=0){
+				ghconsole=GetConsoleWindow();
+			}
+			SetConsoleIcon=(DWORD(WINAPI *)(HICON))GetProcAddress(hmod,"SetConsoleIcon");
+		}
+	}
+	return ghconsole;
+}
+
 void open_console()
 {
 	HWND hcon;
 	FILE *hf;
 	static BYTE consolecreated=FALSE;
 	static int hcrt=0;
-	static HWND (WINAPI *GetConsoleWindow)(void)=0;
 
 	if(consolecreated==TRUE)
 	{
@@ -36,17 +51,6 @@ void open_console()
 	*stdout=*hf;
 	setvbuf(stdout,NULL,_IONBF,0);
 	consolecreated=TRUE;
-	if(GetConsoleWindow==0){
-		HMODULE hmod=LoadLibrary(TEXT("kernel32.dll"));
-		if(hmod!=0){
-			GetConsoleWindow=(HWND (WINAPI *)(void))GetProcAddress(hmod,"GetConsoleWindow");
-			if(GetConsoleWindow!=0){
-				ghconsole=GetConsoleWindow();
-			}
-			SetConsoleIcon=(DWORD(WINAPI *)(HICON))GetProcAddress(hmod,"SetConsoleIcon");
-		}
-	}
-
 }
 
 __int64 get_time()
@@ -175,6 +179,14 @@ int key_state(int key)
 int main(int argc,char **argv)
 {
 	int test_wave_player();
+	HANDLE hcon;
+	hcon=get_console_handle();
+	if(hcon){
+		HANDLE hdesk=GetDesktopWindow();
+		RECT rect={0};
+		GetWindowRect(hdesk,&rect);
+		SetWindowPos(hcon,NULL,0,rect.bottom/2,0,0,SWP_NOZORDER|SWP_NOSIZE|SWP_SHOWWINDOW);
+	}
 	test_shit();
 
 	_beginthread(&test_wave_player,0,0);
