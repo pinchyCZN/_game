@@ -6,7 +6,8 @@
 #include "libtcc.h"
 
 ALLEGRO_MUTEX *g_mutex=0;
-ALLEGRO_FONT *g_font;
+ALLEGRO_FONT *g_font=0;
+ALLEGRO_DISPLAY *g_display=0;
 static int g_shutdown=FALSE;
 static int key_list[10]={0};
 
@@ -42,10 +43,39 @@ typedef struct{
 static ENTITY *blobs[1000]={0};
 static ALLEGRO_BITMAP *player_bm=0;
 
+//move cursor above window
+void exit_cursor()
+{
+	RECT rect={0};
+	HWND hwnd;
+	if(0==g_display)
+		return;
+	hwnd=(HWND)al_get_win_window_handle(g_display);
+	GetWindowRect(hwnd,&rect);
+	SetCursorPos((rect.left+rect.right)/2,rect.top-5);
+	ShowWindow(hwnd,SW_HIDE);
+	hwnd=GetConsoleWindow();
+	if(hwnd){
+		ShowWindow(hwnd,SW_HIDE);
+	}
+}
+void center_cursor()
+{
+	RECT rect={0};
+	HWND hwnd;
+	if(0==g_display)
+		return;
+	hwnd=(HWND)al_get_win_window_handle(g_display);
+	GetWindowRect(hwnd,&rect);
+	SetCursorPos((rect.left+rect.right)/2,(rect.bottom+rect.top)/2);
+	SetFocus(hwnd);
+}
+
 void do_exit()
 {
 	if(g_mutex)
 		al_lock_mutex(g_mutex);
+	exit_cursor();
 	exit(0);
 }
 void abort_msg(const char *msg)
@@ -185,7 +215,7 @@ typedef struct{
 	float scale;
 }MOVEMENT;
 
-int move_player1()
+int __move_player1()
 {
 	int result=FALSE;
 	ENTITY *e;
@@ -206,6 +236,13 @@ int move_player1()
 		17,0,
 		-4,0, //mx,my
 		3,1,3.0},
+		{{ALLEGRO_KEY_Z,0,0,0},
+		300,
+		80+17*5,34, //sx,sy
+		0,0, //xy skip
+		0,-1, //mx my
+		3,0,3.0
+		},
 	};
 	if(!get_entity(PLAYER1,&e))
 		return result;
@@ -236,7 +273,6 @@ int move_player1()
 				anim->v_scale=m->scale;
 				anim->frame=frame;
 				e->time=tick;
-
 			}
 			found=TRUE;
 		}
@@ -251,7 +287,7 @@ int move_player1()
 		anim->dh=anim->sh;
 		anim->h_scale=3.;
 		anim->v_scale=3.;
-		e->time=tick;
+		e->time=0;
 	}
 	return result;
 }
@@ -317,7 +353,7 @@ void *game_thread(ALLEGRO_THREAD *athread,void *arg)
 		al_flip_display();
 
 		al_unlock_mutex(g_mutex);
-		move_player1();
+		move_player1_script();
 		al_wait_for_vsync();
 
 	}
@@ -373,6 +409,7 @@ int test_game()
 
 	al_get_monitor_info(0,&info);
 	disp = al_create_display(1,1);
+	g_display=disp;
 	if(0==disp){
 		abort_msg("error creating display\n");
 	}
@@ -390,12 +427,7 @@ int test_game()
 	al_clear_to_color(al_map_rgb_f(0,0,0));
 	al_flip_display();
 	al_set_window_position(disp,info.x2-640,info.y2-480-100);
-	Sleep(1000);
-	if(1)
-	{
-		HWND hwnd=al_get_win_window_handle(disp);
-		SetFocus(hwnd);
-	}
+	center_cursor();
 
 	gthread=al_create_thread(&game_thread,(void*)disp);
 	al_start_thread(gthread);

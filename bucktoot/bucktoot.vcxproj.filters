@@ -27,9 +27,6 @@
     <ClCompile Include="..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wave_player.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\game.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,6 +35,12 @@
     </ClCompile>
     <ClCompile Include="..\tcc\libtcc.c">
       <Filter>Source Files\tcc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\move_player.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wave_player.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

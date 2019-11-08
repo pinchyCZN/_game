@@ -8,6 +8,9 @@
 
 ALLEGRO_THREAD *g_compiler_thread;
 
+int get_entity(int id,void *);
+__int64 get_time();
+int are_keys_down(int *list,int count);
 
 int add(int a, int b)
 {
@@ -25,11 +28,14 @@ int my_printf(const char *fmt,...)
 }
 
 char my_program[] =
+/*
 "#include <allegro5/allegro.h>\n"
 "int func(int x){\n"
 "return 0\n"
 "\n"
 "}\n"
+*/
+"int func(int x){ return x+1; }\n"
 ;
 
 
@@ -98,7 +104,64 @@ int test_shit()
 	return 0;
 }
 
+int compile_program(TCCState *state,char *code_str)
+{
+	int result=FALSE;
+	TCCState *s=state;
+	tcc_add_include_path(s,"..\\tcc\\");
+	tcc_add_include_path(s,"..\\tcc\\include\\");
+	tcc_add_include_path(s,"..\\allegro\\include");
+	tcc_add_include_path(s,"..\\tcc\\win32\\include");
+	tcc_add_library_path(s,"..\\tcc\\win32\\lib");
+	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+	if (tcc_compile_string(s, my_program) == -1)
+		return result;
+
+	tcc_add_symbol(s, "get_entity", get_entity);
+	tcc_add_symbol(s, "get_time", get_time);
+	tcc_add_symbol(s, "are_keys_down", are_keys_down);
+
+	if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){
+		return result;
+	}
+	result=TRUE;
+	return result;
+}
+
+
+
+void *g_script_func=0;
 void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
+{
+	TCCState *state=0;
+	WCHAR *path=0;
+	int path_len=1024;
+	HANDLE fn=INVALID_HANDLE_VALUE;
+	path=calloc(path_len,2);
+	if(0==path)
+		goto EXIT_THREAD;
+	GetCurrentDirectoryW(path_len,path);
+	fn=FindFirstChangeNotification(path,FALSE,FILE_NOTIFY_CHANGE_FILE_NAME|FILE_NOTIFY_CHANGE_LAST_WRITE);
+	if(INVALID_HANDLE_VALUE==fn)
+		goto EXIT_THREAD;
+
+	while(1){
+		if(0==state){
+			state=tcc_new();
+		}
+		if(state){
+
+		}
+	}
+EXIT_THREAD:
+	free(path);
+	if(INVALID_HANDLE_VALUE!=fn)
+		FindCloseChangeNotification(fn);
+
+	return 0;
+}
+
+int move_player1_script()
 {
 
 	return 0;

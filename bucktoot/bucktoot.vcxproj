@@ -28,6 +28,7 @@
     </ClCompile>
     <ClCompile Include="..\game.c" />
     <ClCompile Include="..\main.c" />
+    <ClCompile Include="..\move_player.c" />
     <ClCompile Include="..\other.c" />
     <ClCompile Include="..\tcc\libtcc.c" />
     <ClCompile Include="..\wave_player.c" />
