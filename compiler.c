@@ -12,22 +12,22 @@ int get_entity(int id,void *);
 __int64 get_time();
 int are_keys_down(int *list,int count);
 
-int add(int a, int b)
+static int add(int a, int b)
 {
 	return a + b;
 }
 
-const char *hello()
+static const char *hello()
 {
 	return "hello!\n";
 }
 
-int my_printf(const char *fmt,...)
+static int my_printf(const char *fmt,...)
 {
 	return 0;
 }
 
-char my_program[] =
+static char my_program[] =
 /*
 "#include <allegro5/allegro.h>\n"
 "int func(int x){\n"
@@ -104,17 +104,20 @@ int test_shit()
 	return 0;
 }
 
-int compile_program(TCCState *state,char *code_str)
+static int compile_program(TCCState *state,char *code_str)
 {
 	int result=FALSE;
 	TCCState *s=state;
+	if(0==state || 0==code_str){
+		return result;
+	}
 	tcc_add_include_path(s,"..\\tcc\\");
 	tcc_add_include_path(s,"..\\tcc\\include\\");
 	tcc_add_include_path(s,"..\\allegro\\include");
 	tcc_add_include_path(s,"..\\tcc\\win32\\include");
 	tcc_add_library_path(s,"..\\tcc\\win32\\lib");
 	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-	if (tcc_compile_string(s, my_program) == -1)
+	if (tcc_compile_string(s, code_str) == -1)
 		return result;
 
 	tcc_add_symbol(s, "get_entity", get_entity);
@@ -128,10 +131,60 @@ int compile_program(TCCState *state,char *code_str)
 	return result;
 }
 
+static int get_code_file(WCHAR **fname)
+{
+	int result=FALSE;
+	const int tmp_len=4096;
+	WCHAR *tmp;
+	tmp=calloc(tmp_len+1,sizeof(WCHAR));
+	if(tmp){
+		GetCurrentDirectoryW(tmp_len,tmp);
+		if(tmp[0]){
+			_snwprintf(tmp,tmp_len,L"%s\\move_code.c",tmp);
+			fname[0]=tmp;
+			result=TRUE;
+		}
+	}
+	return result;
+}
+static int get_flen(FILE *f)
+{
+	int result=0;
+	if(f){
+		int pos;
+		pos=ftell(f);
+		fseek(f,0,SEEK_END);
+		result=ftell(f);
+		fseek(f,pos,SEEK_SET);
+	}
+	return result;
+}
+static int read_file(char **str)
+{
+	int result=FALSE;
+	WCHAR *fname=0;
+	get_code_file(&fname);
+	if(fname){
+		FILE *f=_wfopen(fname,L"rb");
+		if(f){
+			int len;
+			char *tmp;
+			len=get_flen(f);
+			tmp=calloc(len+1,1);
+			if(tmp){
+				fread(tmp,1,len,f);
+				*str=tmp;
+				result=TRUE;
+			}
+			fclose(f);
+		}
+	}
+	return result;
+}
 
 
-void *g_script_func=0;
-void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
+static void *g_script_func=0;
+static void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
 {
 	TCCState *state=0;
 	WCHAR *path=0;
@@ -142,15 +195,35 @@ void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
 		goto EXIT_THREAD;
 	GetCurrentDirectoryW(path_len,path);
 	fn=FindFirstChangeNotification(path,FALSE,FILE_NOTIFY_CHANGE_FILE_NAME|FILE_NOTIFY_CHANGE_LAST_WRITE);
-	if(INVALID_HANDLE_VALUE==fn)
+	if(INVALID_HANDLE_VALUE==fn){
 		goto EXIT_THREAD;
-
+	}
+	goto READ_FILE;
 	while(1){
-		if(0==state){
-			state=tcc_new();
-		}
-		if(state){
-
+		int res;
+		res=FindNextChangeNotification(fn);
+		if(!res)
+			break;
+		res=WaitForSingleObject(fn,INFINITE);
+		if(WAIT_OBJECT_0==res){
+READ_FILE:
+			if(state){
+				tcc_delete(state);
+				state=0;
+			}
+			if(0==state){
+				state=tcc_new();
+			}
+			if(state){
+				char *str=0;
+				read_file(&str);
+				if(str){
+					compile_program(state,str);
+					free(str);
+				}
+			}
+		}else{
+			break;
 		}
 	}
 EXIT_THREAD:

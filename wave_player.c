@@ -562,7 +562,7 @@ int mod_speed(double mod)
 	return 0;
 }
 
-int test_wave_player()
+int test_wave_player(void *arg)
 {
 	load_wavs();
 

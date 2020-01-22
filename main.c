@@ -156,7 +156,7 @@ int getkey_wait()
 	}
 	return result;
 }
-int get_flen(FILE *f)
+static int get_flen(FILE *f)
 {
 	int result;
 	int pos;
@@ -178,7 +178,7 @@ int key_state(int key)
 
 int main(int argc,char **argv)
 {
-	int test_wave_player();
+	int test_wave_player(void *);
 	HANDLE hcon;
 	hcon=get_console_handle();
 	if(hcon){
