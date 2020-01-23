@@ -187,7 +187,7 @@ int main(int argc,char **argv)
 		GetWindowRect(hdesk,&rect);
 		SetWindowPos(hcon,NULL,0,rect.bottom/2,0,0,SWP_NOZORDER|SWP_NOSIZE|SWP_SHOWWINDOW);
 	}
-	test_shit();
+	//test_shit();
 	start_compiler_thread();
 	_beginthread(&test_wave_player,0,0);
 	test_game();

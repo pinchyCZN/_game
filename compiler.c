@@ -123,6 +123,7 @@ static int compile_program(TCCState *state,char *code_str)
 	tcc_add_symbol(s, "get_entity", get_entity);
 	tcc_add_symbol(s, "get_time", get_time);
 	tcc_add_symbol(s, "are_keys_down", are_keys_down);
+	tcc_add_symbol(s, "memset", memset);
 
 	if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){
 		return result;
@@ -184,6 +185,8 @@ static int read_file(char **str)
 
 
 static void *g_script_func=0;
+static CRITICAL_SECTION g_mutex={0};
+static int g_mutex_ready=FALSE;
 static void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
 {
 	TCCState *state=0;
@@ -191,6 +194,8 @@ static void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
 	int path_len=1024;
 	HANDLE fn=INVALID_HANDLE_VALUE;
 	path=calloc(path_len,2);
+	InitializeCriticalSection(&g_mutex);
+	g_mutex_ready=TRUE;
 	if(0==path)
 		goto EXIT_THREAD;
 	GetCurrentDirectoryW(path_len,path);
@@ -202,11 +207,15 @@ static void *compile_thread(ALLEGRO_THREAD *athread,void *arg)
 	while(1){
 		int res;
 		res=FindNextChangeNotification(fn);
-		if(!res)
+		if(!res){
+			printf("next change notification failed\n");
 			break;
+		}
 		res=WaitForSingleObject(fn,INFINITE);
 		if(WAIT_OBJECT_0==res){
 READ_FILE:
+			EnterCriticalSection(&g_mutex);
+			g_script_func=0;
 			if(state){
 				tcc_delete(state);
 				state=0;
@@ -218,11 +227,17 @@ READ_FILE:
 				char *str=0;
 				read_file(&str);
 				if(str){
-					compile_program(state,str);
+					printf("compiling program\n");
+					res=compile_program(state,str);
+					if(res){
+						g_script_func=tcc_get_symbol(state,"move_player1");
+					}
 					free(str);
 				}
 			}
+			LeaveCriticalSection(&g_mutex);
 		}else{
+			printf("ERROR WAIT\n");
 			break;
 		}
 	}
@@ -236,7 +251,16 @@ EXIT_THREAD:
 
 int move_player1_script()
 {
-
+	typedef int (*MOVECODE)();
+	MOVECODE move_code;
+	if(!g_mutex_ready)
+		return 0;
+	EnterCriticalSection(&g_mutex);
+	if(g_script_func){
+		move_code=(MOVECODE)g_script_func;
+		move_code();
+	}
+	LeaveCriticalSection(&g_mutex);
 	return 0;
 }
 

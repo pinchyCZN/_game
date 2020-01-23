@@ -3,7 +3,6 @@ Debug/
 Release/
 allegro/
 bucktoot/*/
-tcc/
 *.user
 *.log
 *.ncb
