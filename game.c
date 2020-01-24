@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "libtcc.h"
+#include "entity.h"
 
 ALLEGRO_MUTEX *g_mutex=0;
 ALLEGRO_FONT *g_font=0;
@@ -11,34 +12,6 @@ ALLEGRO_DISPLAY *g_display=0;
 static int g_shutdown=FALSE;
 static int key_list[10]={0};
 
-#define PLAYER1 1
-#define PLAYER2 2
-
-__int64 get_time();
-
-typedef struct{
-	int state;
-	int frame;
-	int sx,sy;
-	int sw,sh;
-	float dx,dy;
-	float dw,dh;
-	int h_flip,v_flip;
-	float h_scale,v_scale;
-	ALLEGRO_BITMAP *bm;
-}ANIM;
-
-typedef struct{
-	int id;
-	int xpos;
-	int ypos;
-	int zpos;
-	float vx;
-	float vy;
-	float vz;
-	__int64 time;
-	ANIM anim;
-}ENTITY;
 
 static ENTITY *blobs[1000]={0};
 static ALLEGRO_BITMAP *player_bm=0;
@@ -204,17 +177,6 @@ int get_entity(int id,ENTITY **e)
 	return result;
 }
 
-typedef struct{
-	int keys[4];
-	__int64 delta;
-	int sx,sy;
-	int xskip,yskip;
-	int mx,my;
-	int modulo;
-	int flip_h;
-	float scale;
-}MOVEMENT;
-
 int __move_player1()
 {
 	int result=FALSE;
@@ -292,7 +254,7 @@ int __move_player1()
 	return result;
 }
 
-void draw_bitmap(ANIM *anim)
+void draw_bitmap(ANIM *anim,int ox,int oy)
 {
 	int flags=0;
 	float sx,sy,sw,sh;
@@ -312,24 +274,31 @@ void draw_bitmap(ANIM *anim)
 	sy=anim->sy;
 	sw=anim->sw;
 	sh=anim->sh;
-	dx=anim->dx;
-	dy=anim->dy;
+	dx=anim->dx+ox;
+	dy=anim->dy+oy;
 	dw=anim->dw*anim->h_scale;
 	dh=anim->dh*anim->v_scale;
 	bm=anim->bm;
 	al_draw_scaled_bitmap(bm,sx,sy,sw,sh,dx,dy,dw,dh,flags);
 }
 
-void draw_entities()
+void draw_entities(ALLEGRO_DISPLAY *disp)
 {
 	int i,count;
+	int ox,oy;
+	__int64 tick;
+	tick=get_time();
+	ox=al_get_display_height(disp);
+	oy=al_get_display_width(disp);
+	ox/=2;
+	oy/=2;
 	count=_countof(blobs);
 	for(i=0;i<count;i++){
 		ENTITY *e;
 		e=blobs[i];
 		if(0==e)
 			continue;
-		draw_bitmap(&e->anim);
+		draw_bitmap(&e->anim,ox,oy);
 	}
 }
 
@@ -348,7 +317,7 @@ void *game_thread(ALLEGRO_THREAD *athread,void *arg)
 		al_lock_mutex(g_mutex);
 		al_clear_to_color(al_map_rgb_f(0,0,0));
 		al_draw_textf(g_font,al_map_rgb_f(1,1,1),0,0,0,"x=%i y=%i",x,y);
-		draw_entities();
+		draw_entities(disp);
 
 		al_flip_display();
 
@@ -374,8 +343,8 @@ int create_p1()
 	e->id=PLAYER1;
 	e->anim.bm=player_bm;
 	e->anim.state=0;
-	e->xpos=320;
-	e->ypos=200;
+	e->xpos=0;
+	e->ypos=0;
 	add_entity(e);
 	move_player1();
 	return TRUE;

@@ -5,12 +5,11 @@
 #include <string.h>
 
 #include "libtcc.h"
+#include "utils_time.h"
+#include "utils.h"
+#include "game.h"
 
 ALLEGRO_THREAD *g_compiler_thread;
-
-int get_entity(int id,void *);
-__int64 get_time();
-int are_keys_down(int *list,int count);
 
 static int add(int a, int b)
 {
@@ -116,6 +115,8 @@ static int compile_program(TCCState *state,char *code_str)
 	tcc_add_include_path(s,"..\\allegro\\include");
 	tcc_add_include_path(s,"..\\tcc\\win32\\include");
 	tcc_add_library_path(s,"..\\tcc\\win32\\lib");
+	tcc_add_include_path(s,"..");
+	tcc_add_sysinclude_path(s,"..\\tcc\\win32\\include\\winapi");
 	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 	if (tcc_compile_string(s, code_str) == -1)
 		return result;
