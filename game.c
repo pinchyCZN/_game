@@ -314,9 +314,13 @@ void *game_thread(ALLEGRO_THREAD *athread,void *arg)
 	al_set_target_bitmap(al_get_backbuffer(disp));
 	printf("thread\n");
 	while(1){
+		ENTITY *e=0;
 		al_lock_mutex(g_mutex);
 		al_clear_to_color(al_map_rgb_f(0,0,0));
-		al_draw_textf(g_font,al_map_rgb_f(1,1,1),0,0,0,"x=%i y=%i",x,y);
+		get_entity(PLAYER1,&e);
+		if(e){
+			al_draw_textf(g_font,al_map_rgb_f(1,1,1),0,0,0,"x=%i y=%i",e->xpos,e->ypos);
+		}
 		draw_entities(disp);
 
 		al_flip_display();
@@ -342,7 +346,6 @@ int create_p1()
 	}
 	e->id=PLAYER1;
 	e->anim.bm=player_bm;
-	e->anim.state=0;
 	e->xpos=0;
 	e->ypos=0;
 	add_entity(e);

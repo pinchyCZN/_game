@@ -36,9 +36,6 @@
     <ClCompile Include="..\tcc\libtcc.c">
       <Filter>Source Files\tcc</Filter>
     </ClCompile>
-    <ClCompile Include="..\move_player.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wave_player.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +43,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\utils_time.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="move_code.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

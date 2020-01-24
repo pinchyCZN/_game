@@ -124,6 +124,7 @@ static int compile_program(TCCState *state,char *code_str)
 	tcc_add_symbol(s, "get_entity", get_entity);
 	tcc_add_symbol(s, "get_time", get_time);
 	tcc_add_symbol(s, "are_keys_down", are_keys_down);
+	tcc_add_symbol(s, "is_key_down", is_key_down);
 	tcc_add_symbol(s, "memset", memset);
 
 	if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){

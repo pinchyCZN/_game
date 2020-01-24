@@ -28,12 +28,17 @@
     </ClCompile>
     <ClCompile Include="..\game.c" />
     <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\move_player.c" />
     <ClCompile Include="..\other.c" />
     <ClCompile Include="..\tcc\libtcc.c" />
     <ClCompile Include="..\utils.c" />
     <ClCompile Include="..\utils_time.c" />
     <ClCompile Include="..\wave_player.c" />
+    <ClCompile Include="move_code.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(solutiondir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(solutiondir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(solutiondir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(solutiondir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\entity.h" />

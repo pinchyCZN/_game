@@ -65,7 +65,7 @@ int move_player1()
 	300,
 	80+17*5,34, //sx,sy
 	0,0, //xy skip
-	0,-1, //mx my
+	0,1, //mx my
 	3,0,3.0
 	},
 	};
@@ -107,7 +107,7 @@ int move_player1()
 		anim->sy=34;
 		anim->frame=0;
 		anim->dx=e->xpos;
-		anim->dy=e->ypos;
+		anim->dy=-e->ypos;
 		anim->dw=anim->sw;
 		anim->dh=anim->sh;
 		anim->h_scale=3.;

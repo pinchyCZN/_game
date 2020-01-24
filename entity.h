@@ -4,8 +4,15 @@
 #define PLAYER1 1
 #define PLAYER2 2
 
+enum{
+	PS_IDLE=0,
+	PS_RUN,
+	PS_JUMP,
+	PS_FALL,
+	PS_DEAD,
+};
+
 typedef struct{
-	int state;
 	int frame;
 	int sx,sy;
 	int sw,sh;
@@ -25,6 +32,7 @@ typedef struct{
 	float vy;
 	float vz;
 	__int64 time;
+	int state;
 	ANIM anim;
 }ENTITY;
 
